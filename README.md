@@ -28,28 +28,23 @@ MoA_paper_code/
 pip install torch pandas numpy scikit-learn h5py tqdm
 ```
 
-## Feature Extraction with CLAM
+## Feature Extraction with TRIDENT
 
-Use [CLAM](https://github.com/mahmoodlab/CLAM) to extract patch embeddings from whole slide images:
+Use [TRIDENT](https://github.com/mahmoodlab/TRIDENT) to extract patch embeddings from whole slide images:
 
 ```bash
-# 1. Clone CLAM
-git clone https://github.com/mahmoodlab/CLAM.git
-cd CLAM
+# 1. Clone TRIDENT
+git clone https://github.com/mahmoodlab/trident.git
+cd trident
+conda create -n "trident" python=3.10
+conda activate trident
+pip install -e .
+```
 
-# 2. Create patches from WSIs
-python create_patches_fp.py \
-  --source /path/to/slides \
-  --save_dir /path/to/patches \
-  --patch_size 256 --step_size 256 --seg --patch
-
-# 3. Extract features using a pretrained encoder
-python extract_features_fp.py \
-  --data_h5_dir /path/to/patches \
-  --data_slide_dir /path/to/slides \
-  --csv_path /path/to/process_list.csv \
-  --feat_dir /path/to/embeddings \
-  --batch_size 512 --slide_ext .svs
+After installation
+```bash
+# 2. Create patches and extract features from WSIs
+python python run_batch_of_slides.py --task all --wsi_dir ./wsis --job_dir ./trident_processed --patch_encoder uni_v1 --mag 20 --patch_size 256
 ```
 
 Output: `.h5` files with `features` array of shape `[N_patches, D]` per slide.
@@ -126,5 +121,4 @@ Results saved to: `<saving_name>/<num_expert>_experts/Results_5fold_.../fold_*/`
 - `confusion_matrix.png` - Test results
 
 ## References
-
-- **CLAM** - Lu, M.Y., Williamson, D.F.K., Chen, T.Y. et al. Data-efficient and weakly supervised computational pathology on whole-slide images. *Nat Biomed Eng* 5, 555–570 (2021). https://doi.org/10.1038/s41551-020-00682-w
+TRIDENT - Zhang, A., Jaume, G., Vaidya, A., Ding, T., & Mahmood, F. (2025). Accelerating Data Processing and Benchmarking of AI Models for Pathology. arXiv preprint arXiv:2502.06750. https://arxiv.org/abs/2502.06750
