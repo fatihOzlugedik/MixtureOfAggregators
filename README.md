@@ -124,3 +124,7 @@ python train.py \
 Results saved to: `<saving_name>/<num_expert>_experts/Results_5fold_.../fold_*/`
 - `best_model.pt` - Model checkpoint
 - `confusion_matrix.png` - Test results
+
+## References
+
+- **CLAM** - Lu, M.Y., Williamson, D.F.K., Chen, T.Y. et al. Data-efficient and weakly supervised computational pathology on whole-slide images. *Nat Biomed Eng* 5, 555–570 (2021). https://doi.org/10.1038/s41551-020-00682-w
