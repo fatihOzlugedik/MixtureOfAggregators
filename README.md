@@ -28,6 +28,32 @@ MoA_paper_code/
 pip install torch pandas numpy scikit-learn h5py tqdm
 ```
 
+## Feature Extraction with CLAM
+
+Use [CLAM](https://github.com/mahmoodlab/CLAM) to extract patch embeddings from whole slide images:
+
+```bash
+# 1. Clone CLAM
+git clone https://github.com/mahmoodlab/CLAM.git
+cd CLAM
+
+# 2. Create patches from WSIs
+python create_patches_fp.py \
+  --source /path/to/slides \
+  --save_dir /path/to/patches \
+  --patch_size 256 --step_size 256 --seg --patch
+
+# 3. Extract features using a pretrained encoder
+python extract_features_fp.py \
+  --data_h5_dir /path/to/patches \
+  --data_slide_dir /path/to/slides \
+  --csv_path /path/to/process_list.csv \
+  --feat_dir /path/to/embeddings \
+  --batch_size 512 --slide_ext .svs
+```
+
+Output: `.h5` files with `features` array of shape `[N_patches, D]` per slide.
+
 ## Data Layout
 
 ```
