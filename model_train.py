@@ -17,9 +17,9 @@ from typing import Dict, Tuple, List
 from patient_data import DataMatrix, PatientRecord
 
 
-class ModelTrainer_v2:
+class ModelTrainer:
     '''
-    MoA v2 Model Trainer with all improved features as default:
+    MoA Model Trainer with all improved features as default:
     - Switch Transformer / CV² load-balancing loss
     - Router warmup strategy
     - Expert usage tracking and logging

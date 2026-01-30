@@ -1,9 +1,9 @@
 import torch.nn as nn
 import models as models
 
-class cAItomorph_v2(nn.Module):
+class MIL_aggregtor(nn.Module):
     """
-    MoA v2 Classifier with simplified architecture:
+    MoA Classifier with simplified architecture:
     - Always uses separate experts (no shared/adapter modes)
     - Always uses single shared classification head (no local heads per expert)
     - Expert diversity initialization (always on)
@@ -16,7 +16,7 @@ class cAItomorph_v2(nn.Module):
     def __init__(self, class_count, arch, expert_arch, embedding_dim=768,
                  router_style="topk", topk=1, save_gates=False, num_expert=1,
                  router_type="linear", base_seed=None, use_st=False):
-        super(cAItomorph_v2, self).__init__()
+        super(MIL_aggregtor, self).__init__()
 
         # Determine which architecture to use
         if use_st and arch == "MixtureOfAggregators":
@@ -28,7 +28,7 @@ class cAItomorph_v2(nn.Module):
         if arch_to_use not in models.__dict__:
             raise ValueError(f"Unknown model architecture '{arch_to_use}'")
 
-        # V2: Simplified architecture with all improvements enabled
+        # Simplified architecture with all improvements enabled
         # - Always separate experts (diversity via different seeds)
         # - Always single shared head (no local heads per expert)
         self.model = models.__dict__[arch_to_use](
@@ -39,7 +39,7 @@ class cAItomorph_v2(nn.Module):
             k_active=topk,
             num_experts=num_expert,
             router_type=router_type,
-            diversity_init=True,                # V2: Always enabled
+            diversity_init=True,                # Always enabled
             base_seed=base_seed
         )
         self.save_gates = save_gates
@@ -87,4 +87,4 @@ class cAItomorph_v2(nn.Module):
         return logits
 
     def __repr__(self):
-        return f"cAItomorph_v2(model={self.model})"
+        return f"MIL_aggregtor(model={self.model})"

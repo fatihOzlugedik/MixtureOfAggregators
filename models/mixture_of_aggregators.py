@@ -46,15 +46,15 @@ class MixtureOfAggregators(nn.Module):
         self.k_active = k_active
         self.router_type = router_type
 
-        # === V2: Simplified expert setup ===
+        # === Simplified expert setup ===
         # Always separate mode (no shared projection)
         # Always no local head (experts produce latents only)
         base_kwargs = {
             "num_classes": num_classes,
             "input_dim": input_dim,
-            "mode": "separate",           # V2: Always separate (hard-coded)
-            "shared_proj": None,          # V2: No shared projection
-            "use_local_head": False,      # V2: No local heads (hard-coded)
+            "mode": "separate",           # Always separate (hard-coded)
+            "shared_proj": None,          # No shared projection
+            "use_local_head": False,      # No local heads (hard-coded)
         }
 
         if expert_arch == 'Transformer':
@@ -127,13 +127,13 @@ class MixtureOfAggregators(nn.Module):
 
         elif self.router_type == "ABMIL":
             router_kwargs = {
-            "num_classes": num_experts,  ## V2: Output num_experts logits,it will be used for routing
+            "num_classes": num_experts,  ## Output num_experts logits, used for routing
             "size_arg": "big",
             "dropout": dropout,
             "input_dim": input_dim,
-            "mode": "separate",           # V2: Always separate (hard-coded)
-            "shared_proj": None,          # V2: No shared projection
-            "use_local_head": True,      # V2: Use local head for router
+            "mode": "separate",           # Always separate (hard-coded)
+            "shared_proj": None,          # No shared projection
+            "use_local_head": True,       # Use local head for router
             }
 
             self.router_fc = ABMILExpert(**router_kwargs)
@@ -266,7 +266,7 @@ class MixtureOfAggregators(nn.Module):
             k_effective = k
 
         if self.router_style == "dense":
-            # V2: All experts produce latents only (no local heads)
+            # All experts produce latents only (no local heads)
             latents = []
             for expert in self.experts:
                 latent, _ = expert(x)  # Ignore logits (always None)
@@ -278,19 +278,19 @@ class MixtureOfAggregators(nn.Module):
             gates = g_soft.unsqueeze(-1)  # [B, E, 1]
             latent = (latents * gates).sum(dim=1)  # [B, D]
 
-            # V2: Always use shared classification head
+            # Always use shared classification head
             logits = self.head(latent)  # [B, C]
             return latent, logits, g_soft
 
         elif self.router_style == "topk":
-            # V2: Sparse top-k routing with shared head
+            # Sparse top-k routing with shared head
             k_effective = min(k_effective, self.num_experts)
             topk = g_soft.topk(k_effective, dim=-1)
             idx = topk.indices  # [B, k_effective]
             weights = topk.values  # [B, k_effective]
             weights = weights / (weights.sum(dim=-1, keepdim=True) + 1e-8)
 
-            # V2: All experts produce latents only (no local heads)
+            # All experts produce latents only (no local heads)
             z_list = []
             for b in range(B):
                 z_b = 0
@@ -305,6 +305,6 @@ class MixtureOfAggregators(nn.Module):
 
             latent = torch.stack(z_list, dim=0).squeeze(1)  # [B, D]
 
-            # V2: Always use shared classification head
+            # Always use shared classification head
             logits = self.head(latent)  # [B, C]
             return latent, logits, g_soft

@@ -9,8 +9,8 @@ import numpy as np
 from pathlib import Path
 from sklearn.model_selection import StratifiedKFold
 
-from model_train_v2 import ModelTrainer_v2
-from classifier_v2 import cAItomorph_v2
+from model_train import ModelTrainer
+from classifier import MIL_aggregtor
 from dataset import MILDataset
 from plot_confusion import plot_confusion_matrix
 from scheduler import BuildScheduler
@@ -21,7 +21,7 @@ import pandas as pd
 
 
 def main():
-    parser = ap.ArgumentParser(description='MoA v2 Training Pipeline - All improvements enabled by default')
+    parser = ap.ArgumentParser(description='MoA Training Pipeline - All improvements enabled by default')
 
     # Training parameters
     parser.add_argument('--lr', type=float, default=5e-5, help='learning rate')
@@ -56,7 +56,7 @@ def main():
     parser.add_argument('--extension', default='h5', choices=['h5', 'pt'], help='feature file extension')
 
     # Mixture-of-Experts / Aggregator setup
-    # V2: Simplified architecture - always separate experts with shared head
+    # Simplified architecture - always separate experts with shared head
     parser.add_argument('--router_style', choices=['topk', 'dense'],
                         default='topk', help="Routing strategy")
     parser.add_argument('--topk', type=int, default=1,
@@ -70,13 +70,13 @@ def main():
 
     parser.add_argument('--expert_arch', choices=['Transformer', 'ABMIL', 'TransMIL', 'DSMIL'], default='Transformer')
 
-    # Load-balancing loss (v2 defaults)
+    # Load-balancing loss
     parser.add_argument('--use_lb_loss', action='store_true',
                         help='Enable load-balancing loss on router gates')
     parser.add_argument('--lb_coef', type=float, default=0.0,
                         help='Coefficient for load-balancing loss')
     parser.add_argument('--lb_loss_type', choices=['cv2', 'switch'], default='switch',
-                        help='V2: Load-balancing loss type (default: switch)')
+                        help='Load-balancing loss type (default: switch)')
 
     # Adaptive 3-phase warmup (default: automatically scaled with num_experts)
     parser.add_argument('--router_warmup_epochs', type=int, default=None,
@@ -119,11 +119,11 @@ def main():
 
 
 
-    RESULT_FOLDER_ROOT = f"Results_v2_5fold_testfixed_{backbone_name}_{args.arch}_{args.router_style}_topk{args.topk}_router_arch_{args.router_type}_seed{seed}_lb{args.lb_coef}_{args.lb_loss_type}_warmup{router_warmup_epochs}_gumbel{args.use_gumbel}_st{args.use_st}_expert_{args.expert_arch}"
+    RESULT_FOLDER_ROOT = f"Results_5fold_testfixed_{backbone_name}_{args.arch}_{args.router_style}_topk{args.topk}_router_arch_{args.router_type}_seed{seed}_lb{args.lb_coef}_{args.lb_loss_type}_warmup{router_warmup_epochs}_gumbel{args.use_gumbel}_st{args.use_st}_expert_{args.expert_arch}"
 
     RESULT_FOLDER_ROOT = Path(RESULT_FOLDER_ROOT)
     print('='*80)
-    print('MoA v2 Training Pipeline - Adaptive 3-Phase Warmup')
+    print('MoA Training Pipeline - Adaptive 3-Phase Warmup')
     print('='*80)
     print('Results will be saved under: ', RESULT_FOLDER_ROOT)
     print()
@@ -210,8 +210,8 @@ def main():
         dataloaders['test'] = DataLoader(datasets['test'], batch_size=1, shuffle=False, num_workers=num_workers, pin_memory=True)
         print("Dataloaders are ready..")
 
-        # V2: Simplified architecture - separate experts with shared head
-        model = cAItomorph_v2(
+        # Simplified architecture - separate experts with shared head
+        model = MIL_aggregtor(
             class_count=class_count,
             arch=args.arch,
             embedding_dim=embedding_dim,
@@ -221,8 +221,8 @@ def main():
             save_gates=args.save_gates,
             num_expert=args.num_expert,
             router_type=args.router_type,
-            base_seed=seed,  # V2: diversity_init always enabled
-            use_st=args.use_st  # V2: Optional Straight-Through estimator
+            base_seed=seed,  # diversity_init always enabled
+            use_st=args.use_st  # Optional Straight-Through estimator
         )
 
         if checkpoint is not None:
@@ -244,9 +244,9 @@ def main():
         # Determine effective LB coefficient based on toggle
         effective_lb_coef = float(args.lb_coef) if (bool(args.use_lb_loss) or float(args.lb_coef) > 0.0) else 0.0
 
-        # V2: Always use ModelTrainer_v2 with all improvements
+        # Always use ModelTrainer with all improvements
         print("="*80)
-        print("ModelTrainer_v2 Configuration:")
+        print("ModelTrainer Configuration:")
         print(f"  ✅ Expert diversity initialization: ENABLED")
         print(f"  ✅ Adaptive 3-phase warmup: ENABLED")
         print(f"  ✅ Load-balancing loss ({args.lb_loss_type}): {'ENABLED' if effective_lb_coef > 0 else 'DISABLED'}")
@@ -256,7 +256,7 @@ def main():
         print(f"  ✅ Clean validation metrics: ENABLED")
         print("="*80)
 
-        train_obj = ModelTrainer_v2(
+        train_obj = ModelTrainer(
             model=model,
             dataloaders=dataloaders,
             epochs=int(args.ep),
@@ -301,7 +301,7 @@ def main():
         print('Gradient accumulation:', args.grad_accum)
         print('Seed:', seed)
         print('Max epochs:', args.ep)
-        print('MoA v2 - Adaptive 3-Phase Warmup')
+        print('MoA - Adaptive 3-Phase Warmup')
 
 
 if __name__ == "__main__":
